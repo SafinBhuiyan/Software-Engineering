@@ -1,0 +1,16 @@
+{
+  "name": "presentation-room-booking",
+  "version": "1.0.0",
+  "description": "A presentation room booking system for university students and teachers",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "dependencies": {
+    "oracledb": "^5.5.0"
+  },
+  "keywords": ["room-booking", "presentation", "university", "oracle"],
+  "author": "Your Name",
+  "license": "MIT"
+} 

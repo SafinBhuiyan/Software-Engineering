@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Room Booking System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>👨‍🏫 Teacher Dashboard</h1>
+            <nav class="nav">
+                <a href="/" class="nav-link">Home</a>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="dashboard-section">
+                <h2>Create New Room</h2>
+                <form id="createRoomForm" class="form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="room_no">Room Number:</label>
+                            <input type="text" id="room_no" name="room_no" required placeholder="e.g., 56">
+                        </div>
+                        <div class="form-group">
+                            <label for="date">Date:</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="time_from">Time From:</label>
+                            <input type="time" id="time_from" name="time_from" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="time_to">Time To:</label>
+                            <input type="time" id="time_to" name="time_to" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Room & Generate Slots</button>
+                </form>
+                <div id="createMessage" class="message"></div>
+            </div>
+
+            <div class="dashboard-section">
+                <h2>Room Overview</h2>
+                <div id="roomsContainer" class="rooms-container">
+                    <p>Loading rooms...</p>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h2>All Bookings</h2>
+                <div id="bookingsContainer" class="bookings-container">
+                    <p>Loading bookings...</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 University Presentation Room Booking System</p>
+        </footer>
+    </div>
+
+    <script>
+        // Set default date to today
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Check authentication on page load
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch('/api/auth/check');
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.role !== 'teacher') {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                // Load data
+                loadRooms();
+                loadAllBookings();
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        });
+
+        // Create room form submission
+        document.getElementById('createRoomForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                room_no: formData.get('room_no'),
+                date: formData.get('date'),
+                time_from: formData.get('time_from'),
+                time_to: formData.get('time_to')
+            };
+
+            try {
+                const response = await fetch('/api/teacher/create-room', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(`Room created successfully! Generated ${result.slots_created} slots.`, 'success');
+                    this.reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                    
+                    // Refresh data
+                    loadRooms();
+                    loadAllBookings();
+                } else {
+                    showMessage(result.error || 'Failed to create room', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        });
+
+        // Load rooms overview
+        async function loadRooms() {
+            try {
+                const response = await fetch('/api/teacher/rooms');
+                const result = await response.json();
+                
+                const container = document.getElementById('roomsContainer');
+                
+                if (result.rooms.length === 0) {
+                    container.innerHTML = '<p class="no-data">No rooms created yet.</p>';
+                    return;
+                }
+                
+                const roomsHTML = result.rooms.map(room => `
+                    <div class="room-card">
+                        <div class="room-info">
+                            <h3>Room ${room.room_no}</h3>
+                            <p><strong>Date:</strong> ${room.date_available}</p>
+                            <p><strong>Time:</strong> ${room.time_from} - ${room.time_to}</p>
+                            <p><strong>Slots:</strong> ${room.total_slots} total, ${room.available_slots} available, ${room.booked_slots} booked</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = roomsHTML;
+            } catch (error) {
+                document.getElementById('roomsContainer').innerHTML = 
+                    '<p class="error">Error loading rooms. Please refresh the page.</p>';
+            }
+        }
+
+        // Load all bookings
+        async function loadAllBookings() {
+            try {
+                const response = await fetch('/api/teacher/bookings');
+                const result = await response.json();
+                
+                const container = document.getElementById('bookingsContainer');
+                
+                if (result.bookings.length === 0) {
+                    container.innerHTML = '<p class="no-data">No bookings found.</p>';
+                    return;
+                }
+                
+                const bookingsHTML = result.bookings.map(booking => `
+                    <div class="booking-card">
+                        <div class="booking-info">
+                            <h3>Room ${booking.room_no}</h3>
+                            <p><strong>Student ID:</strong> ${booking.student_id}</p>
+                            <p><strong>Date:</strong> ${booking.date}</p>
+                            <p><strong>Time:</strong> ${booking.time_start} - ${booking.time_end}</p>
+                            <p><strong>Token:</strong> <code>${booking.token_code}</code></p>
+                            <p><strong>Booked:</strong> ${new Date(booking.booking_time).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = bookingsHTML;
+            } catch (error) {
+                document.getElementById('bookingsContainer').innerHTML = 
+                    '<p class="error">Error loading bookings. Please refresh the page.</p>';
+            }
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('createMessage');
+            messageDiv.textContent = text;
+            messageDiv.className = `message message-${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            } catch (error) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html> 

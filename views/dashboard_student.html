@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Room Booking System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>👨‍🎓 Student Dashboard</h1>
+            <nav class="nav">
+                <a href="/" class="nav-link">Home</a>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="dashboard-section">
+                <h2>Available Slots</h2>
+                <div id="slotsContainer" class="slots-container">
+                    <p>Loading available slots...</p>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h2>My Bookings</h2>
+                <div id="bookingsContainer" class="bookings-container">
+                    <p>Loading your bookings...</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 University Presentation Room Booking System</p>
+        </footer>
+    </div>
+
+    <script>
+        // Check authentication on page load
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch('/api/auth/check');
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.role !== 'student') {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                // Load data
+                loadAvailableSlots();
+                loadMyBookings();
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        });
+
+        // Load available slots
+        async function loadAvailableSlots() {
+            try {
+                const response = await fetch('/api/student/slots');
+                const result = await response.json();
+                
+                const container = document.getElementById('slotsContainer');
+                
+                if (result.slots.length === 0) {
+                    container.innerHTML = '<p class="no-data">No available slots at the moment.</p>';
+                    return;
+                }
+                
+                const slotsHTML = result.slots.map(slot => `
+                    <div class="slot-card">
+                        <div class="slot-info">
+                            <h3>Room ${slot.room_no}</h3>
+                            <p><strong>Date:</strong> ${slot.date}</p>
+                            <p><strong>Time:</strong> ${slot.time_start} - ${slot.time_end}</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="bookSlot(${slot.slot_id})">
+                            Book This Slot
+                        </button>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = slotsHTML;
+            } catch (error) {
+                document.getElementById('slotsContainer').innerHTML = 
+                    '<p class="error">Error loading slots. Please refresh the page.</p>';
+            }
+        }
+
+        // Load user's bookings
+        async function loadMyBookings() {
+            try {
+                const response = await fetch('/api/student/bookings');
+                const result = await response.json();
+                
+                const container = document.getElementById('bookingsContainer');
+                
+                if (result.bookings.length === 0) {
+                    container.innerHTML = '<p class="no-data">You have no bookings yet.</p>';
+                    return;
+                }
+                
+                const bookingsHTML = result.bookings.map(booking => `
+                    <div class="booking-card">
+                        <div class="booking-info">
+                            <h3>Room ${booking.room_no}</h3>
+                            <p><strong>Date:</strong> ${booking.date}</p>
+                            <p><strong>Time:</strong> ${booking.time_start} - ${booking.time_end}</p>
+                            <p><strong>Token:</strong> <code>${booking.token_code}</code></p>
+                        </div>
+                        <a href="/token?code=${booking.token_code}" class="btn btn-secondary">
+                            View Token
+                        </a>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = bookingsHTML;
+            } catch (error) {
+                document.getElementById('bookingsContainer').innerHTML = 
+                    '<p class="error">Error loading bookings. Please refresh the page.</p>';
+            }
+        }
+
+        // Book a slot
+        async function bookSlot(slotId) {
+            try {
+                const response = await fetch('/api/student/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ slot_id: slotId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Slot booked successfully! Redirecting to token page...');
+                    window.location.href = result.redirect;
+                } else {
+                    alert(result.error || 'Booking failed. Please try again.');
+                    // Refresh slots to show updated availability
+                    loadAvailableSlots();
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            } catch (error) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html> 

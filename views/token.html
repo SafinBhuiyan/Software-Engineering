@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Token - Room Booking System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; padding: 20px; }
+            .token-card { 
+                border: 2px solid #000 !important; 
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header no-print">
+            <h1>🎫 Booking Token</h1>
+            <a href="/" class="back-link">← Back to Home</a>
+        </header>
+
+        <main class="main-content">
+            <div class="token-container">
+                <div class="token-card" id="tokenCard">
+                    <div class="token-header">
+                        <h2>🎓 University Presentation Token</h2>
+                        <div class="university-info">
+                            <p><strong>University Name:</strong> Your University</p>
+                            <p><strong>Department:</strong> Computer Science</p>
+                        </div>
+                    </div>
+
+                    <div class="token-details">
+                        <div class="token-row">
+                            <span class="label">Token Code:</span>
+                            <span class="value" id="tokenCode">Loading...</span>
+                        </div>
+                        <div class="token-row">
+                            <span class="label">Student Name:</span>
+                            <span class="value" id="studentName">Loading...</span>
+                        </div>
+                        <div class="token-row">
+                            <span class="label">Student ID:</span>
+                            <span class="value" id="studentId">Loading...</span>
+                        </div>
+                        <div class="token-row">
+                            <span class="label">Room Number:</span>
+                            <span class="value" id="roomNo">Loading...</span>
+                        </div>
+                        <div class="token-row">
+                            <span class="label">Date:</span>
+                            <span class="value" id="bookingDate">Loading...</span>
+                        </div>
+                        <div class="token-row">
+                            <span class="label">Time:</span>
+                            <span class="value" id="bookingTime">Loading...</span>
+                        </div>
+                        <div class="token-row">
+                            <span class="label">Booking Time:</span>
+                            <span class="value" id="createdTime">Loading...</span>
+                        </div>
+                    </div>
+
+                    <div class="token-footer">
+                        <p class="instructions">
+                            <strong>Instructions:</strong><br>
+                            1. Present this token to the floor worker<br>
+                            2. Keep this token safe until your presentation<br>
+                            3. This token is valid only for the specified time and room
+                        </p>
+                        <div class="signature-section">
+                            <div class="signature-line">
+                                <span>Floor Worker Signature:</span>
+                                <div class="signature-box"></div>
+                            </div>
+                            <div class="signature-line">
+                                <span>Date & Time:</span>
+                                <div class="signature-box"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="token-actions no-print">
+                    <button onclick="window.print()" class="btn btn-primary">🖨️ Print Token</button>
+                    <a href="/dashboard_student" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer no-print">
+            <p>&copy; 2025 University Presentation Room Booking System</p>
+        </footer>
+    </div>
+
+    <script>
+        // Get token code from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenCode = urlParams.get('code');
+
+        if (!tokenCode) {
+            document.getElementById('tokenCard').innerHTML = 
+                '<div class="error-message"><h2>Error</h2><p>No token code provided.</p></div>';
+        } else {
+            // Load token details
+            loadTokenDetails(tokenCode);
+        }
+
+        async function loadTokenDetails(tokenCode) {
+            try {
+                // For demo purposes, we'll use mock data
+                // In production, this would fetch from the API
+                const mockTokenData = {
+                    token_code: tokenCode,
+                    student_name: 'Safin',
+                    student_id: 'CSE2025001',
+                    room_no: '56',
+                    date: '2025-01-31',
+                    time_start: '10:30',
+                    time_end: '11:00',
+                    created_time: new Date().toLocaleString()
+                };
+
+                // Populate token details
+                document.getElementById('tokenCode').textContent = mockTokenData.token_code;
+                document.getElementById('studentName').textContent = mockTokenData.student_name;
+                document.getElementById('studentId').textContent = mockTokenData.student_id;
+                document.getElementById('roomNo').textContent = mockTokenData.room_no;
+                document.getElementById('bookingDate').textContent = mockTokenData.date;
+                document.getElementById('bookingTime').textContent = `${mockTokenData.time_start} - ${mockTokenData.time_end}`;
+                document.getElementById('createdTime').textContent = mockTokenData.created_time;
+
+            } catch (error) {
+                document.getElementById('tokenCard').innerHTML = 
+                    '<div class="error-message"><h2>Error</h2><p>Failed to load token details.</p></div>';
+            }
+        }
+
+        // Auto-print when page loads (optional)
+        // window.addEventListener('load', () => {
+        //     setTimeout(() => window.print(), 1000);
+        // });
+    </script>
+</body>
+</html> 
