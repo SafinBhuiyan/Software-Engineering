@@ -5,12 +5,21 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js"
+    "dev": "node app.js",
+    "db:init": "node db/init.js",
+    "db:setup": "node setup-oracle.js",
+    "start:oracle": "node -r dotenv/config app.js"
   },
   "dependencies": {
+    "dotenv": "^17.2.1",
     "oracledb": "^5.5.0"
   },
-  "keywords": ["room-booking", "presentation", "university", "oracle"],
+  "keywords": [
+    "room-booking",
+    "presentation",
+    "university",
+    "oracle"
+  ],
   "author": "Your Name",
   "license": "MIT"
-} 
+}

@@ -1,0 +1,17 @@
+# Oracle 11g Database Configuration
+# Copy this content to your .env file
+
+# Database connection
+DB_USER=system
+DB_PASSWORD=admin
+DB_CONNECT_STRING=localhost:1521:XE
+
+# Optional: Oracle client directory (if not in PATH)
+# ORACLE_CLIENT_DIR=C:\oracle\instantclient_11_2
+
+# Server configuration
+PORT=3000
+NODE_ENV=development
+
+# Note: Oracle 11g uses SID notation (:) instead of service name (/)
+# Format: hostname:port:SID 
