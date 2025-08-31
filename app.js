@@ -9,32 +9,8 @@ const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
 
-// Database connection
-let oracledb;
-let dbConfig;
-try {
-    oracledb = require('oracledb');
-    
-    // Load environment variables if dotenv is available
-    try {
-        require('dotenv').config();
-        dbConfig = {
-            user: process.env.DB_USER || 'system',
-            password: process.env.DB_PASSWORD || 'yourpassword',
-            connectString: process.env.DB_CONNECT_STRING || 'localhost:1521/XE'
-        };
-        console.log('🔗 Oracle configuration loaded from environment');
-    } catch (error) {
-        console.log('💡 dotenv not found, using default Oracle config');
-        dbConfig = {
-            user: 'system',
-            password: 'yourpassword',
-            connectString: 'localhost:1521/XE'
-        };
-    }
-} catch (error) {
-    console.log('OracleDB not available, using mock data for demo');
-}
+// Simple mock data approach - no Oracle complexity
+console.log('🚀 Starting presentation room booking system with mock data');
 
 // MIME types
 const mimeTypes = {

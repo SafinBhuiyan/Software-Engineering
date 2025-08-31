@@ -5,14 +5,10 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js",
-    "db:init": "node db/init.js",
-    "db:setup": "node setup-oracle.js",
-    "start:oracle": "node -r dotenv/config app.js"
+    "dev": "node app.js"
   },
   "dependencies": {
-    "dotenv": "^17.2.1",
-    "oracledb": "^5.5.0"
+    "oracledb": "^6.9.0"
   },
   "keywords": [
     "room-booking",
