@@ -3,53 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presentation Room Booking System</title>
+    <title>Unislot - University Presentation Room Booking</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>🎓 Unislot-University Presentation Room Booking</h1>
-            <p>Book your presentation slots easily and efficiently</p>
-        </header>
+        <nav class="navbar">
+            <div class="navbar-logo">
+                <img src="/images/logo.png" alt="Unislot Logo">
+            </div>
+            <div class="navbar-nav">
+                <a href="/home" class="nav-link active">Home</a>
+                <a href="/register" class="nav-link">Register</a>
+            </div>
+            <div class="navbar-auth">
+                <a href="/login" class="btn-nav btn-login">Login</a>
+            </div>
+        </nav>
 
         <main class="main-content">
             <div class="welcome-section">
-                <h2>Welcome to the Room Booking System</h2>
-                <p>Students can book presentation rooms for their academic presentations. Teachers can manage room availability and create new slots.</p>
-            </div>
-
-            <div class="action-buttons">
-                <div class="button-group">
-                    <h3>For Students</h3>
-                    <a href="/login" class="btn btn-primary">Student Login</a>
-                    <a href="/register" class="btn btn-secondary">Student Registration</a>
-                </div>
-
-                <div class="button-group">
-                    <h3>For Teachers</h3>
-                    <a href="/login" class="btn btn-primary">Teacher Login</a>
-                    <a href="/register" class="btn btn-secondary">Teacher Registration</a>
-                </div>
-            </div>
-
-            <div class="features">
-                <h3>System Features</h3>
-                <ul>
-                    <li>✅ Easy room booking with 30-minute slots</li>
-                    <li>✅ Instant token generation for verification</li>
-                    <li>✅ Real-time slot availability</li>
-                    <li>✅ Teacher room management</li>
-                    <li>✅ Printable booking tokens</li>
-                </ul>
+                <h2>Welcome</h2>
+                <p>Book your presentation slots easily and efficiently</p>
+                <a href="/login" class="btn btn-primary" style="margin-top: 20px; padding: 15px 30px; font-size: 1.1rem;">Login to Continue</a>
             </div>
         </main>
 
         <footer class="footer">
-            <p>&copy; 2025 University Presentation Room Booking System</p>
+            <p>&copy; 2025 Unislot-Presentation Room Booking System</p>
         </footer>
     </div>
 
-    <script src="/js/script.js"></script>
+    <script>
+        // Auto-redirect to login after 3 seconds
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 3000);
+    </script>
 </body>
-</html> 
+</html>

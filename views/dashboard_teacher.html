@@ -4,17 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Room Booking System</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .modal-close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Ensure modal is always visible when display is block */
+        .modal[style*="display: block"] {
+            display: block !important;
+        }
+
+        .modal[style*="display: none"] {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>👨‍🏫 Teacher Dashboard</h1>
-            <nav class="nav">
-                <a href="/" class="nav-link">Home</a>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
-            </nav>
-        </header>
+        <nav class="navbar">
+            <div class="navbar-logo">
+                <img src="/images/logo.png" alt="Unislot Logo">
+            </div>
+            <div class="navbar-nav">
+                <a href="/dashboard_teacher" class="nav-link active">Dashboard</a>
+                <a href="/rooms" class="nav-link">Rooms</a>
+                <a href="/teacher_bookings" class="nav-link">All Bookings</a>
+            </div>
+            <div class="navbar-auth">
+                <button id="logoutBtn" class="btn-nav btn-logout">Logout</button>
+            </div>
+        </nav>
 
         <main class="main-content">
             <div class="dashboard-section">
@@ -45,6 +152,45 @@
                 <div id="createMessage" class="message"></div>
             </div>
 
+            <!-- Edit Room Modal -->
+            <div id="editRoomModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Edit Room</h3>
+                        <span class="modal-close" onclick="hideEditRoomModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editRoomForm">
+                            <input type="hidden" id="edit_room_id" name="room_id">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit_room_no">Room Number:</label>
+                                    <input type="text" id="edit_room_no" name="room_no" required placeholder="e.g., 56">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_date">Date:</label>
+                                    <input type="date" id="edit_date" name="date" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit_time_from">Time From:</label>
+                                    <input type="time" id="edit_time_from" name="time_from" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_time_to">Time To:</label>
+                                    <input type="time" id="edit_time_to" name="time_to" required>
+                                </div>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="hideEditRoomModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Update Room</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <div class="dashboard-section">
                 <h2>Room Overview</h2>
                 <div id="roomsContainer" class="rooms-container">
@@ -61,7 +207,7 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2025 University Presentation Room Booking System</p>
+            <p>&copy; 2025 Unislot-Presentation Room Booking System</p>
         </footer>
     </div>
 
@@ -77,13 +223,35 @@
                     window.location.href = '/login';
                     return;
                 }
-                
+
                 const result = await response.json();
                 if (result.role !== 'teacher') {
                     window.location.href = '/';
                     return;
                 }
-                
+
+                // Check if modal elements exist
+                console.log('Modal elements check:');
+                console.log('editRoomModal:', document.getElementById('editRoomModal'));
+                console.log('editRoomForm:', document.getElementById('editRoomForm'));
+                console.log('edit_room_id:', document.getElementById('edit_room_id'));
+
+                // Ensure modal is properly hidden initially
+                const modal = document.getElementById('editRoomModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    console.log('Modal display set to none');
+                } else {
+                    console.error('Modal element not found!');
+                }
+
+                // Test modal functionality
+                console.log('Setting up modal test...');
+                setTimeout(() => {
+                    console.log('Modal test: editRoomModal exists:', !!document.getElementById('editRoomModal'));
+                    console.log('Modal test: editRoomForm exists:', !!document.getElementById('editRoomForm'));
+                }, 1000);
+
                 // Load data
                 loadRooms();
                 loadAllBookings();
@@ -144,16 +312,53 @@
                     return;
                 }
                 
-                const roomsHTML = result.rooms.map(room => `
+                const roomsHTML = result.rooms.map(room => {
+                    // Format date to DD-MM-YYYY
+                    const dateParts = room.date_available.split('-');
+                    const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0]}`;
+
+                    // Format time to HH-MM AM/PM
+                    const formatTime = (timeStr) => {
+                        const [hours, minutes] = timeStr.split(':');
+                        const hour24 = parseInt(hours);
+                        const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                        const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                        return `${String(hour12).padStart(2, '0')}-${String(minutes).padStart(2, '0')} ${ampm}`;
+                    };
+
+                    const formattedStartTime = formatTime(room.time_from);
+                    const formattedEndTime = formatTime(room.time_to);
+
+                    console.log('Room data for edit:', {
+                        room_id: room.room_id,
+                        room_no: room.room_no,
+                        date_available: room.date_available,
+                        time_from: room.time_from,
+                        time_to: room.time_to,
+                        date_formatted: room.date_available,
+                        time_from_formatted: room.time_from,
+                        time_to_formatted: room.time_to
+                    });
+
+                    return `
                     <div class="room-card">
                         <div class="room-info">
                             <h3>Room ${room.room_no}</h3>
-                            <p><strong>Date:</strong> ${room.date_available}</p>
-                            <p><strong>Time:</strong> ${room.time_from} - ${room.time_to}</p>
+                            <p><strong>Date:</strong> ${formattedDate}</p>
+                            <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
                             <p><strong>Slots:</strong> ${room.total_slots} total, ${room.available_slots} available, ${room.booked_slots} booked</p>
                         </div>
+                        <div class="room-actions" style="display: flex; gap: 8px; justify-content: flex-start;">
+                            <button class="btn btn-secondary" onclick="handleEditClick(${room.room_id}, '${room.room_no}', '${room.date_available}', '${room.time_from}', '${room.time_to}')">
+                                Edit Room
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteRoom(${room.room_id})">
+                                Delete Room
+                            </button>
+                        </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
                 
                 container.innerHTML = roomsHTML;
             } catch (error) {
@@ -175,18 +380,48 @@
                     return;
                 }
                 
-                const bookingsHTML = result.bookings.map(booking => `
+                const bookingsHTML = result.bookings.map(booking => {
+                    // Format date to DD-MM-YYYY
+                    const dateParts = booking.date.split('-');
+                    const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0]}`;
+
+                    // Format time to HH-MM AM/PM
+                    const formatTime = (timeStr) => {
+                        const [hours, minutes] = timeStr.split(':');
+                        const hour24 = parseInt(hours);
+                        const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                        const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                        return `${String(hour12).padStart(2, '0')}-${String(minutes).padStart(2, '0')} ${ampm}`;
+                    };
+
+                    const formattedStartTime = formatTime(booking.time_start);
+                    const formattedEndTime = formatTime(booking.time_end);
+
+                    // Format booking time to DD-MM-YYYY HH-MM AM/PM
+                    const bookingDate = new Date(booking.booking_time);
+                    const bookingDay = String(bookingDate.getDate()).padStart(2, '0');
+                    const bookingMonth = String(bookingDate.getMonth() + 1).padStart(2, '0');
+                    const bookingYear = bookingDate.getFullYear();
+                    const bookingHour24 = bookingDate.getHours();
+                    const bookingHour12 = bookingHour24 === 0 ? 12 : bookingHour24 > 12 ? bookingHour24 - 12 : bookingHour24;
+                    const bookingMinutes = String(bookingDate.getMinutes()).padStart(2, '0');
+                    const bookingAmpm = bookingHour24 >= 12 ? 'PM' : 'AM';
+
+                    const formattedBookingTime = `${bookingDay}-${bookingMonth}-${bookingYear} ${String(bookingHour12).padStart(2, '0')}-${bookingMinutes} ${bookingAmpm}`;
+
+                    return `
                     <div class="booking-card">
                         <div class="booking-info">
                             <h3>Room ${booking.room_no}</h3>
-                            <p><strong>Student ID:</strong> ${booking.student_id}</p>
-                            <p><strong>Date:</strong> ${booking.date}</p>
-                            <p><strong>Time:</strong> ${booking.time_start} - ${booking.time_end}</p>
+                            <p><strong>Student:</strong> ${booking.student_name} (${booking.student_id})</p>
+                            <p><strong>Date:</strong> ${formattedDate}</p>
+                            <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
                             <p><strong>Token:</strong> <code>${booking.token_code}</code></p>
-                            <p><strong>Booked:</strong> ${new Date(booking.booking_time).toLocaleString()}</p>
+                            <p><strong>Booked:</strong> ${formattedBookingTime}</p>
                         </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
                 
                 container.innerHTML = bookingsHTML;
             } catch (error) {
@@ -207,6 +442,177 @@
             }, 5000);
         }
 
+        // Test modal function
+        function testModal() {
+            console.log('Testing modal...');
+            document.getElementById('edit_room_id').value = '1';
+            document.getElementById('edit_room_no').value = '56';
+            document.getElementById('edit_date').value = '2025-01-31';
+            document.getElementById('edit_time_from').value = '10:00';
+            document.getElementById('edit_time_to').value = '17:00';
+            document.getElementById('editRoomModal').style.display = 'block';
+            console.log('Test modal opened');
+        }
+
+        // Handle edit button click
+        function handleEditClick(roomId, roomNo, date, timeFrom, timeTo) {
+            editRoom(roomId, roomNo, date, timeFrom, timeTo);
+        }
+
+        // Edit room
+        function editRoom(roomId, roomNo, date, timeFrom, timeTo) {
+            try {
+                // Check if elements exist
+                const modal = document.getElementById('editRoomModal');
+                const roomIdField = document.getElementById('edit_room_id');
+                const roomNoField = document.getElementById('edit_room_no');
+                const dateField = document.getElementById('edit_date');
+                const timeFromField = document.getElementById('edit_time_from');
+                const timeToField = document.getElementById('edit_time_to');
+
+                if (!modal || !roomIdField || !roomNoField || !dateField || !timeFromField || !timeToField) {
+                    alert('Error: Modal elements not found!');
+                    return;
+                }
+
+                // Populate form fields
+                roomIdField.value = roomId;
+                roomNoField.value = roomNo;
+                dateField.value = date;
+                timeFromField.value = timeFrom;
+                timeToField.value = timeTo;
+
+                // Show modal
+                modal.style.display = 'block';
+            } catch (error) {
+                alert('Error opening edit modal: ' + error.message);
+            }
+        }
+
+        // Hide edit room modal
+        function hideEditRoomModal() {
+            document.getElementById('editRoomModal').style.display = 'none';
+            document.getElementById('editRoomForm').reset();
+        }
+
+        // Handle edit room form submission
+        document.getElementById('editRoomForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            try {
+                const formData = new FormData(e.target);
+                const roomData = Object.fromEntries(formData);
+                const roomId = roomData.room_id;
+
+                // Remove room_id from the data object as it's in the URL
+                delete roomData.room_id;
+
+                const response = await fetch(`/api/teacher/rooms/${roomId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(roomData)
+                });
+
+                if (!response.ok) {
+                    alert('HTTP error: ' + response.status);
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('Room updated successfully!', 'success');
+                    hideEditRoomModal();
+                    // Refresh data
+                    loadRooms();
+                    loadAllBookings();
+                } else {
+                    showMessage(result.error || 'Failed to update room', 'error');
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                alert('Network error: ' + error.message);
+                showMessage('Network error. Please try again.', 'error');
+            }
+        });
+
+        // Delete room
+        async function deleteRoom(roomId) {
+            if (!confirm('Are you sure you want to delete this room? This will also delete all its slots. This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/teacher/delete-room?room_id=${roomId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    alert('HTTP error: ' + response.status);
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('Room deleted successfully!', 'success');
+                    // Refresh data
+                    loadRooms();
+                    loadAllBookings();
+                } else {
+                    showMessage(result.error || 'Failed to delete room', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+
+        // Delete slot
+        async function deleteSlot(slotId) {
+            console.log('Delete slot called with ID:', slotId);
+            alert('Delete slot called with ID: ' + slotId);
+
+            if (!confirm('Are you sure you want to delete this slot? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const url = `/api/teacher/delete-slot?slot_id=${slotId}`;
+                console.log('Sending DELETE request to:', url);
+
+                const response = await fetch(url, {
+                    method: 'DELETE'
+                });
+
+                console.log('Delete slot response status:', response.status);
+
+                if (!response.ok) {
+                    console.error('HTTP error:', response.status);
+                    alert('HTTP error: ' + response.status);
+                    return;
+                }
+
+                const result = await response.json();
+                console.log('Delete slot response data:', result);
+                alert('Delete slot response: ' + JSON.stringify(result));
+
+                if (result.success) {
+                    showMessage('Slot deleted successfully!', 'success');
+                    // Refresh data
+                    loadRooms();
+                    loadAllBookings();
+                } else {
+                    showMessage(result.error || 'Failed to delete slot', 'error');
+                }
+            } catch (error) {
+                console.error('Network error in deleteSlot:', error);
+                alert('Network error: ' + error.message);
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', async function() {
             try {
@@ -214,6 +620,28 @@
                 window.location.href = '/';
             } catch (error) {
                 window.location.href = '/';
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const editModal = document.getElementById('editRoomModal');
+            if (event.target === editModal) {
+                hideEditRoomModal();
+            }
+        });
+
+        // Form validation for edit room form
+        document.getElementById('editRoomForm').addEventListener('input', function(e) {
+            const target = e.target;
+            if (target.type === 'time') {
+                // Validate time format
+                const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+                if (!timeRegex.test(target.value)) {
+                    target.setCustomValidity('Please enter a valid time in HH:MM format');
+                } else {
+                    target.setCustomValidity('');
+                }
             }
         });
     </script>

@@ -83,8 +83,8 @@ async function handleRequest(req, res) {
         return;
     }
 
-    // Parse body for POST requests
-    if (method === 'POST') {
+    // Parse body for POST and DELETE requests
+    if (method === 'POST' || method === 'DELETE') {
         req.body = await parseBody(req);
     }
 
@@ -99,7 +99,9 @@ async function handleRequest(req, res) {
 
     // Serve static files
     let filePath;
-    if (pathname === '/' || pathname === '/index') {
+    if (pathname === '/') {
+        filePath = path.join(__dirname, 'views', 'login.html');
+    } else if (pathname === '/home' || pathname === '/index') {
         filePath = path.join(__dirname, 'views', 'index.html');
     } else if (pathname.startsWith('/views/')) {
         filePath = path.join(__dirname, pathname);

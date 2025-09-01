@@ -4,21 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - Room Booking System</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>👨‍🎓 Student Dashboard</h1>
-            <nav class="nav">
-                <a href="/" class="nav-link">Home</a>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
-            </nav>
-        </header>
+        <nav class="navbar">
+            <div class="navbar-logo">
+                <img src="/images/logo.png" alt="Unislot Logo">
+            </div>
+            <div class="navbar-nav">
+                <a href="/dashboard_student" class="nav-link active">Dashboard</a>
+                <a href="/slots" class="nav-link">Available Slots</a>
+                <a href="/bookings" class="nav-link">My Bookings</a>
+            </div>
+            <div class="navbar-auth">
+                <button id="logoutBtn" class="btn-nav btn-logout">Logout</button>
+            </div>
+        </nav>
 
         <main class="main-content">
             <div class="dashboard-section">
-                <h2>Available Slots</h2>
+                <h2>Quick Actions</h2>
+                <div class="action-buttons">
+                    <div class="button-group">
+                        <h3>Available Slots</h3>
+                        <p>View and book available presentation slots</p>
+                        <a href="/slots" class="btn btn-primary">View All Slots</a>
+                    </div>
+                    <div class="button-group">
+                        <h3>My Bookings</h3>
+                        <p>View your current and past bookings</p>
+                        <a href="/bookings" class="btn btn-primary">View All Bookings</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h2>Recent Available Slots</h2>
                 <div id="slotsContainer" class="slots-container">
                     <p>Loading available slots...</p>
                 </div>
@@ -33,7 +56,7 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2025 University Presentation Room Booking System</p>
+            <p>&copy; 2025 Unislot-Presentation Room Booking System</p>
         </footer>
     </div>
 
@@ -74,18 +97,36 @@
                     return;
                 }
                 
-                const slotsHTML = result.slots.map(slot => `
+                const slotsHTML = result.slots.map(slot => {
+                    // Format date to DD-MM-YYYY
+                    const dateParts = slot.date.split('-');
+                    const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0]}`;
+
+                    // Format time to HH-MM AM/PM
+                    const formatTime = (timeStr) => {
+                        const [hours, minutes] = timeStr.split(':');
+                        const hour24 = parseInt(hours);
+                        const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                        const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                        return `${String(hour12).padStart(2, '0')}-${String(minutes).padStart(2, '0')} ${ampm}`;
+                    };
+
+                    const formattedStartTime = formatTime(slot.time_start);
+                    const formattedEndTime = formatTime(slot.time_end);
+
+                    return `
                     <div class="slot-card">
                         <div class="slot-info">
                             <h3>Room ${slot.room_no}</h3>
-                            <p><strong>Date:</strong> ${slot.date}</p>
-                            <p><strong>Time:</strong> ${slot.time_start} - ${slot.time_end}</p>
+                            <p><strong>Date:</strong> ${formattedDate}</p>
+                            <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
                         </div>
                         <button class="btn btn-primary" onclick="bookSlot(${slot.slot_id})">
                             Book This Slot
                         </button>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
                 
                 container.innerHTML = slotsHTML;
             } catch (error) {
@@ -107,19 +148,42 @@
                     return;
                 }
                 
-                const bookingsHTML = result.bookings.map(booking => `
+                const bookingsHTML = result.bookings.map(booking => {
+                    // Format date to DD-MM-YYYY
+                    const dateParts = booking.date.split('-');
+                    const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0]}`;
+
+                    // Format time to HH-MM AM/PM
+                    const formatTime = (timeStr) => {
+                        const [hours, minutes] = timeStr.split(':');
+                        const hour24 = parseInt(hours);
+                        const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                        const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                        return `${String(hour12).padStart(2, '0')}-${String(minutes).padStart(2, '0')} ${ampm}`;
+                    };
+
+                    const formattedStartTime = formatTime(booking.time_start);
+                    const formattedEndTime = formatTime(booking.time_end);
+
+                    return `
                     <div class="booking-card">
                         <div class="booking-info">
                             <h3>Room ${booking.room_no}</h3>
-                            <p><strong>Date:</strong> ${booking.date}</p>
-                            <p><strong>Time:</strong> ${booking.time_start} - ${booking.time_end}</p>
+                            <p><strong>Date:</strong> ${formattedDate}</p>
+                            <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
                             <p><strong>Token:</strong> <code>${booking.token_code}</code></p>
                         </div>
-                        <a href="/token?code=${booking.token_code}" class="btn btn-secondary">
-                            View Token
-                        </a>
+                        <div style="display: flex; gap: 8px; justify-content: flex-start;">
+                            <a href="/token?code=${booking.token_code}" class="btn btn-secondary">
+                                View Token
+                            </a>
+                            <button class="btn btn-danger" onclick="cancelBooking(${booking.booking_id})">
+                                Cancel Booking
+                            </button>
+                        </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
                 
                 container.innerHTML = bookingsHTML;
             } catch (error) {
@@ -148,6 +212,37 @@
                     alert(result.error || 'Booking failed. Please try again.');
                     // Refresh slots to show updated availability
                     loadAvailableSlots();
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+
+        // Cancel booking
+        async function cancelBooking(bookingId) {
+            if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/student/bookings/${bookingId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    alert('HTTP error: ' + response.status);
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Booking cancelled successfully!');
+                    // Refresh bookings to show updated list
+                    loadMyBookings();
+                    loadAvailableSlots();
+                } else {
+                    alert(result.error || 'Failed to cancel booking');
                 }
             } catch (error) {
                 alert('Network error. Please try again.');

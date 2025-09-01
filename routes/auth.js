@@ -5,7 +5,7 @@ const db = require('../db/oracle');
 
 // Generate session ID
 function generateSessionId() {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(16).toString('hex'); // 32 characters instead of 64
 }
 
 // Hash password (simple hash for demo)

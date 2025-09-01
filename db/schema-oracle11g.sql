@@ -93,18 +93,5 @@ BEGIN
 END;
 /
 
--- Insert sample data
-INSERT INTO Students (student_id, name, batch, dept, email, password) 
-VALUES ('CSE2025001', 'Safin', '2025', 'Computer Science', 'safin@university.edu', 'password123');
-
-INSERT INTO Teachers (name, email, password) 
-VALUES ('Dr. Smith', 'smith@university.edu', 'password123');
-
--- Insert sample room
-INSERT INTO Rooms (room_no, date_available, time_from, time_to) 
-VALUES ('56', TO_DATE('2025-01-31', 'YYYY-MM-DD'), 
-        TO_TIMESTAMP('2025-01-31 09:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-        TO_TIMESTAMP('2025-01-31 17:00:00', 'YYYY-MM-DD HH24:MI:SS'));
-
 -- Commit the changes
 COMMIT; 
