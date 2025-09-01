@@ -1,80 +1,44 @@
-// Mock data for demo (replace with Oracle DB in production)
-let mockRooms = [
-    {
-        room_id: 1,
-        room_no: '56',
-        date_available: '2025-01-31',
-        time_from: '2025-01-31T09:00:00',
-        time_to: '2025-01-31T17:00:00'
-    }
-];
-
-let mockSlots = [
-    {
-        slot_id: 1,
-        room_id: 1,
-        slot_start: '2025-01-31T10:00:00',
-        slot_end: '2025-01-31T10:30:00',
-        is_booked: 'N'
-    },
-    {
-        slot_id: 2,
-        room_id: 1,
-        slot_start: '2025-01-31T10:30:00',
-        slot_end: '2025-01-31T11:00:00',
-        is_booked: 'N'
-    },
-    {
-        slot_id: 3,
-        room_id: 1,
-        slot_start: '2025-01-31T11:00:00',
-        slot_end: '2025-01-31T11:30:00',
-        is_booked: 'N'
-    }
-];
-
-let mockBookings = [];
+// Use real Oracle DB
+const db = require('../db/oracle');
 
 // Get user from session
-function getUserFromSession(req) {
+async function getUserFromSession(req) {
     const cookies = req.headers.cookie;
     if (!cookies) return null;
-    
+
     const sessionId = cookies.split(';')
         .find(c => c.trim().startsWith('sessionId='))
         ?.split('=')[1];
-    
-    if (!sessionId) return null;
-    
-    // This would normally check against the sessions table
-    // For demo, we'll use a simple approach
-    return { user_id: '1', role: 'teacher' };
-}
 
-// Generate 30-minute slots between time_from and time_to
-function generateSlots(roomId, date, timeFrom, timeTo) {
-    const slots = [];
-    let currentTime = new Date(timeFrom);
-    const endTime = new Date(timeTo);
-    
-    while (currentTime < endTime) {
-        const slotStart = new Date(currentTime);
-        const slotEnd = new Date(currentTime.getTime() + 30 * 60 * 1000); // 30 minutes
-        
-        if (slotEnd <= endTime) {
-            slots.push({
-                slot_id: mockSlots.length + slots.length + 1,
-                room_id: roomId,
-                slot_start: slotStart.toISOString(),
-                slot_end: slotEnd.toISOString(),
-                is_booked: 'N'
-            });
+    if (!sessionId) return null;
+
+    try {
+        // Check session in database
+        const sessions = await db.execute(
+            'SELECT * FROM Sessions WHERE session_id = :session_id',
+            [sessionId]
+        );
+
+        if (sessions.length === 0) return null;
+
+        const session = sessions[0];
+        // Check if session is expired (24 hours)
+        const now = new Date();
+        const sessionTime = new Date(session.CREATED_AT);
+        if (now - sessionTime > 24 * 60 * 60 * 1000) {
+            // Clean up expired session
+            await db.execute('DELETE FROM Sessions WHERE session_id = :session_id', [sessionId]);
+            return null;
         }
-        
-        currentTime = slotEnd;
+
+        return {
+            user_id: session.USER_ID,
+            role: session.ROLE
+        };
+    } catch (err) {
+        console.error('Session verification error:', err);
+        return null;
     }
-    
-    return slots;
 }
 
 module.exports = function(req, res, parsedUrl) {
@@ -82,120 +46,163 @@ module.exports = function(req, res, parsedUrl) {
     const method = req.method;
 
     if (pathname === '/api/teacher/create-room' && method === 'POST') {
-        const user = getUserFromSession(req);
-        if (!user || user.role !== 'teacher') {
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Unauthorized' }));
-            return;
-        }
+        (async () => {
+            try {
+                const user = await getUserFromSession(req);
+                if (!user || user.role !== 'teacher') {
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Unauthorized' }));
+                    return;
+                }
 
-        const { room_no, date, time_from, time_to } = req.body;
-        
-        if (!room_no || !date || !time_from || !time_to) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Missing required fields' }));
-            return;
-        }
+                const { room_no, date, time_from, time_to } = req.body;
+                if (!room_no || !date || !time_from || !time_to) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Missing required fields' }));
+                    return;
+                }
 
-        // Validate time format
-        const timeFrom = new Date(`${date}T${time_from}`);
-        const timeTo = new Date(`${date}T${time_to}`);
-        
-        if (isNaN(timeFrom.getTime()) || isNaN(timeTo.getTime())) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Invalid time format' }));
-            return;
-        }
+                // Validate time format
+                const timeFrom = new Date(`${date}T${time_from}`);
+                const timeTo = new Date(`${date}T${time_to}`);
+                if (isNaN(timeFrom.getTime()) || isNaN(timeTo.getTime())) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Invalid time format' }));
+                    return;
+                }
+                if (timeFrom >= timeTo) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'End time must be after start time' }));
+                    return;
+                }
 
-        if (timeFrom >= timeTo) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'End time must be after start time' }));
-            return;
-        }
+                // Insert room (room_id auto-generated by trigger)
+                await db.execute(
+                    `INSERT INTO Rooms (room_no, date_available, time_from, time_to)
+                     VALUES (:room_no, TO_DATE(:date, 'YYYY-MM-DD'), TO_TIMESTAMP(:time_from, 'YYYY-MM-DD HH24:MI:SS'), TO_TIMESTAMP(:time_to, 'YYYY-MM-DD HH24:MI:SS'))`,
+                    [room_no, date, `${date} ${time_from}:00`, `${date} ${time_to}:00`]
+                );
 
-        // Create new room
-        const newRoom = {
-            room_id: mockRooms.length + 1,
-            room_no: room_no,
-            date_available: date,
-            time_from: timeFrom.toISOString(),
-            time_to: timeTo.toISOString()
-        };
+                // Get the latest room_id
+                const roomResult = await db.execute('SELECT MAX(room_id) AS room_id FROM Rooms');
+                const room_id = roomResult[0].ROOM_ID;
 
-        mockRooms.push(newRoom);
+                // Generate and insert slots
+                let slotsCreated = 0;
+                let current = new Date(`${date}T${time_from}`);
+                const end = new Date(`${date}T${time_to}`);
+                while (current < end) {
+                    const slotStart = new Date(current);
+                    const slotEnd = new Date(current.getTime() + 30 * 60 * 1000);
+                    if (slotEnd <= end) {
+                        await db.execute(
+                            'INSERT INTO Slots (room_id, slot_start, slot_end, is_booked) VALUES (:room_id, :slot_start, :slot_end, :is_booked)',
+                            [room_id, slotStart.toISOString().replace('T', ' ').substring(0, 19), slotEnd.toISOString().replace('T', ' ').substring(0, 19), 'N']
+                        );
+                        slotsCreated++;
+                    }
+                    current = slotEnd;
+                }
 
-        // Generate 30-minute slots
-        const newSlots = generateSlots(newRoom.room_id, date, timeFrom, timeTo);
-        mockSlots.push(...newSlots);
-
-        res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-            success: true, 
-            room_id: newRoom.room_id,
-            slots_created: newSlots.length,
-            message: 'Room created successfully with ' + newSlots.length + ' slots'
-        }));
+                res.writeHead(201, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    success: true,
+                    room_id,
+                    slots_created: slotsCreated,
+                    message: 'Room created successfully with ' + slotsCreated + ' slots'
+                }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Database error', details: err.message }));
+            }
+        })();
 
     } else if (pathname === '/api/teacher/bookings' && method === 'GET') {
-        const user = getUserFromSession(req);
-        if (!user || user.role !== 'teacher') {
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Unauthorized' }));
-            return;
-        }
+        (async () => {
+            try {
+                const user = await getUserFromSession(req);
+                if (!user || user.role !== 'teacher') {
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Unauthorized' }));
+                    return;
+                }
 
-        // Get all bookings with student and slot information
-        const allBookings = mockBookings.map(booking => {
-            const slot = mockSlots.find(s => s.slot_id === booking.slot_id);
-            const room = mockRooms.find(r => r.room_id === slot.room_id);
-            
-            return {
-                booking_id: booking.booking_id,
-                student_id: booking.student_id,
-                room_no: room.room_no,
-                date: slot.slot_start.split('T')[0],
-                time_start: slot.slot_start.split('T')[1].substring(0, 5),
-                time_end: slot.slot_end.split('T')[1].substring(0, 5),
-                token_code: booking.token_code,
-                booking_time: booking.booking_time,
-                status: 'Booked'
-            };
-        });
+                // Join Bookings, Slots, Rooms, Students
+                const bookings = await db.execute(`
+                    SELECT b.booking_id, b.student_id, s.name AS student_name, r.room_no, sl.slot_start, sl.slot_end, b.token_code, b.booking_time
+                    FROM Bookings b
+                    JOIN Slots sl ON b.slot_id = sl.slot_id
+                    JOIN Rooms r ON sl.room_id = r.room_id
+                    JOIN Students s ON b.student_id = s.student_id
+                    ORDER BY b.booking_time DESC
+                `);
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ bookings: allBookings }));
+                const allBookings = bookings.map(b => ({
+                    booking_id: b.BOOKING_ID,
+                    student_id: b.STUDENT_ID,
+                    student_name: b.STUDENT_NAME,
+                    room_no: b.ROOM_NO,
+                    date: b.SLOT_START instanceof Date ? b.SLOT_START.toISOString().split('T')[0] : '',
+                    time_start: b.SLOT_START instanceof Date ? b.SLOT_START.toISOString().split('T')[1].substring(0,5) : '',
+                    time_end: b.SLOT_END instanceof Date ? b.SLOT_END.toISOString().split('T')[1].substring(0,5) : '',
+                    token_code: b.TOKEN_CODE,
+                    booking_time: b.BOOKING_TIME,
+                    status: 'Booked'
+                }));
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ bookings: allBookings }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Database error', details: err.message }));
+            }
+        })();
 
     } else if (pathname === '/api/teacher/rooms' && method === 'GET') {
-        const user = getUserFromSession(req);
-        if (!user || user.role !== 'teacher') {
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Unauthorized' }));
-            return;
-        }
+        (async () => {
+            try {
+                const user = await getUserFromSession(req);
+                if (!user || user.role !== 'teacher') {
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Unauthorized' }));
+                    return;
+                }
 
-        // Get all rooms with slot information
-        const roomsWithSlots = mockRooms.map(room => {
-            const roomSlots = mockSlots.filter(slot => slot.room_id === room.room_id);
-            const availableSlots = roomSlots.filter(slot => slot.is_booked === 'N').length;
-            const bookedSlots = roomSlots.filter(slot => slot.is_booked === 'Y').length;
-            
-            return {
-                room_id: room.room_id,
-                room_no: room.room_no,
-                date_available: room.date_available,
-                time_from: room.time_from.split('T')[1].substring(0, 5),
-                time_to: room.time_to.split('T')[1].substring(0, 5),
-                total_slots: roomSlots.length,
-                available_slots: availableSlots,
-                booked_slots: bookedSlots
-            };
-        });
+                // Query all rooms and their slots from Oracle DB
+                const rooms = await db.execute('SELECT * FROM Rooms');
+                const slots = await db.execute('SELECT * FROM Slots');
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ rooms: roomsWithSlots }));
+                const roomsWithSlots = rooms.map(room => {
+                    const roomSlots = slots.filter(slot => slot.ROOM_ID === room.ROOM_ID);
+                    const availableSlots = roomSlots.filter(slot => slot.IS_BOOKED === 'N').length;
+                    const bookedSlots = roomSlots.filter(slot => slot.IS_BOOKED === 'Y').length;
+
+                    // Format time_from and time_to as HH:MM
+                    const timeFrom = room.TIME_FROM instanceof Date ? room.TIME_FROM.toISOString().split('T')[1].substring(0,5) : '';
+                    const timeTo = room.TIME_TO instanceof Date ? room.TIME_TO.toISOString().split('T')[1].substring(0,5) : '';
+
+                    return {
+                        room_id: room.ROOM_ID,
+                        room_no: room.ROOM_NO,
+                        date_available: room.DATE_AVAILABLE,
+                        time_from: timeFrom,
+                        time_to: timeTo,
+                        total_slots: roomSlots.length,
+                        available_slots: availableSlots,
+                        booked_slots: bookedSlots
+                    };
+                });
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ rooms: roomsWithSlots }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Database error', details: err.message }));
+            }
+        })();
 
     } else {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Route not found' }));
     }
-}; 
+};

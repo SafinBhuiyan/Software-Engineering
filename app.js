@@ -9,8 +9,8 @@ const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
 
-// Simple mock data approach - no Oracle complexity
-console.log('🚀 Starting presentation room booking system with mock data');
+// Using Oracle DB for data persistence
+console.log('🚀 Starting presentation room booking system with Oracle DB');
 
 // MIME types
 const mimeTypes = {
