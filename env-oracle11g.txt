@@ -15,3 +15,7 @@ NODE_ENV=development
 
 # Note: Oracle 11g uses SID notation (:) instead of service name (/)
 # Format: hostname:port:SID 
+
+# Inside docker container
+# docker exec -it oracle-xe bash
+# sqlplus system/oracle123@XEPDB1
