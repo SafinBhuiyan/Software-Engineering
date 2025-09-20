@@ -62,13 +62,6 @@ presentation-room-booking/
     └── images/           # Image assets
 ```
 
-## 🎯 **Sample Data**
-
-The system comes with sample data for testing:
-- **Student:** CSE2025001 / password123
-- **Teacher:** smith@university.edu / password123
-- **Sample Room:** Room 56 with 30-minute slots
-
 ## 🔧 **API Endpoints**
 
 ### Authentication
