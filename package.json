@@ -8,6 +8,7 @@
     "dev": "node app.js"
   },
   "dependencies": {
+    "dotenv": "^17.2.2",
     "oracledb": "^6.9.0"
   },
   "keywords": [

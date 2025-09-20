@@ -1,13 +1,14 @@
 // db/oracle.js
+require('dotenv').config({ path: './.env' });
 const oracledb = require('oracledb');
 
 // Enable Thick mode for Oracle 11g
 oracledb.initOracleClient({ libDir: 'C:\\instantclient_23_9' }); // Update path if needed
 
 const dbConfig = {
-  user: 'SE',
-  password: 'Se123456',
-  connectString: '//oracle-202503-0.cloudclusters.net:10021/XE', // Update if your service name is different
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  connectString: process.env.DB_CONNECT_STRING,
 };
 
 async function getConnection() {

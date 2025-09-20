@@ -1,4 +1,4 @@
-// test-oracle-connection.js
+require('dotenv').config({ path: './.env' });
 
 const oracledb = require('oracledb');
 // Enable Thick mode for Oracle 11g
@@ -7,9 +7,9 @@ oracledb.initOracleClient({ libDir: 'C:\\instantclient_23_9' }); // Update path 
 async function testConnection() {
   try {
     await oracledb.createPool({
-      user: 'SE',
-      password: 'Se123456',
-      connectString: '//oracle-202503-0.cloudclusters.net:10021/XE' // Change XE if your service name is different
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      connectString: process.env.DB_CONNECT_STRING
     });
     const connection = await oracledb.getConnection();
     const result = await connection.execute('SELECT 1 FROM DUAL');
