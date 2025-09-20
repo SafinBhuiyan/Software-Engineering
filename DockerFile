@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install Oracle Instant Client
 WORKDIR /opt/oracle
-RUN wget https://download.oracle.com/otn_software/linux/instantclient/239000/instantclient-basiclite-linux.x64-23.9.zip \
+RUN wget https://www.oracle.com/webapps/redirect/signon?nexturl=https://download.oracle.com/otn/linux/instantclient/122010/instantclient-basic-linux.x64-12.2.0.1.0.zip \
     && unzip instantclient-basiclite-linux.x64-23.9.zip \
     && rm instantclient-basiclite-linux.x64-23.9.zip
 
