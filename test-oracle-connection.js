@@ -7,9 +7,9 @@ oracledb.initOracleClient({ libDir: 'C:\\instantclient_23_9' }); // Update path 
 async function testConnection() {
   try {
     await oracledb.createPool({
-      user: 'SYSTEM',
-      password: 'admin1234',
-      connectString: 'localhost/ORCL' // Change XE if your service name is different
+      user: 'SE',
+      password: 'Se123456',
+      connectString: '//oracle-202503-0.cloudclusters.net:10021/XE' // Change XE if your service name is different
     });
     const connection = await oracledb.getConnection();
     const result = await connection.execute('SELECT 1 FROM DUAL');

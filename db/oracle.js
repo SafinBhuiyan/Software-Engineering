@@ -5,9 +5,9 @@ const oracledb = require('oracledb');
 oracledb.initOracleClient({ libDir: 'C:\\instantclient_23_9' }); // Update path if needed
 
 const dbConfig = {
-  user: 'SYSTEM',
-  password: 'admin1234',
-  connectString: 'localhost/ORCL', // Update if your service name is different
+  user: 'SE',
+  password: 'Se123456',
+  connectString: '//oracle-202503-0.cloudclusters.net:10021/XE', // Update if your service name is different
 };
 
 async function getConnection() {
