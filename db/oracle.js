@@ -5,7 +5,7 @@ const oracledb = require('oracledb');
 // Enable Thick mode for Oracle 11g
 // oracledb.initOracleClient({ libDir: 'C:\\instantclient_23_9' }); // Update path if needed
 
-oracledb.initOracleClient(); // Update path if needed
+oracledb.initOracleClient({ libDir: '/opt/oracle/instantclient_23_9' }); // Update path if needed
 
 
 const dbConfig = {
