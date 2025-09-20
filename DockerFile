@@ -1,0 +1,23 @@
+# Base Node.js image
+FROM node:20-slim
+
+# Install dependencies for Oracle Instant Client
+RUN apt-get update && apt-get install -y \
+    unzip libaio1 wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Oracle Instant Client
+WORKDIR /opt/oracle
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/239000/instantclient-basiclite-linux.x64-23.9.zip \
+    && unzip instantclient-basiclite-linux.x64-23.9.zip \
+    && rm instantclient-basiclite-linux.x64-23.9.zip
+
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_9
+
+# Set up app
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+CMD ["node", "index.js"]
