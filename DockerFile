@@ -1,23 +1,44 @@
-# Base Node.js image
+# Use a Node.js base image
 FROM node:20-slim
 
-# Install dependencies for Oracle Instant Client
+# Install dependencies for Oracle Instant Client and alien tool
 RUN apt-get update && apt-get install -y \
-    unzip libaio1 wget \
+    unzip \
+    libaio1 \
+    wget \
+    alien \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Oracle Instant Client
-WORKDIR /opt/oracle
-RUN wget https://www.oracle.com/webapps/redirect/signon?nexturl=https://download.oracle.com/otn/linux/instantclient/122010/instantclient-basic-linux.x64-12.2.0.1.0.zip \
-    && unzip instantclient-basiclite-linux.x64-23.9.zip \
-    && rm instantclient-basiclite-linux.x64-23.9.zip
+# Set the Oracle Instant Client version
+ENV INSTANT_CLIENT_VERSION 23.9.0.25.07
 
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_9
+# Download and convert Oracle Instant Client RPM to DEB
+RUN wget https://yum.oracle.com/repo/OracleLinux/OL9/oracle/instantclient23/x86_64/oracle-instantclient-basic-${INSTANT_CLIENT_VERSION}-1.el9.x86_64.rpm \
+    && wget https://yum.oracle.com/repo/OracleLinux/OL9/oracle/instantclient23/x86_64/oracle-instantclient-basiclite-${INSTANT_CLIENT_VERSION}-1.el9.x86_64.rpm \
+    && alien -d oracle-instantclient-basic-${INSTANT_CLIENT_VERSION}-1.el9.x86_64.rpm \
+    && alien -d oracle-instantclient-basiclite-${INSTANT_CLIENT_VERSION}-1.el9.x86_64.rpm \
+    && dpkg -i oracle-instantclient-basic_${INSTANT_CLIENT_VERSION}-2_amd64.deb \
+    && dpkg -i oracle-instantclient-basiclite_${INSTANT_CLIENT_VERSION}-2_amd64.deb \
+    && rm -f oracle-instantclient-basic-${INSTANT_CLIENT_VERSION}-1.el9.x86_64.rpm \
+    && rm -f oracle-instantclient-basiclite-${INSTANT_CLIENT_VERSION}-1.el9.x86_64.rpm \
+    && rm -f oracle-instantclient-basic_${INSTANT_CLIENT_VERSION}-2_amd64.deb \
+    && rm -f oracle-instantclient-basiclite_${INSTANT_CLIENT_VERSION}-2_amd64.deb
 
-# Set up app
+# Set environment variables for Oracle Instant Client
+ENV LD_LIBRARY_PATH=/usr/lib/oracle/${INSTANT_CLIENT_VERSION}/client64/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+
+# Set the working directory
 WORKDIR /usr/src/app
+
+# Copy package.json and install dependencies
 COPY package*.json ./
 RUN npm install
+
+# Copy the rest of the application code
 COPY . .
 
-CMD ["node", "index.js"]
+# Expose the application port
+EXPOSE 3000
+
+# Command to run the application
+CMD ["npm", "start"]
