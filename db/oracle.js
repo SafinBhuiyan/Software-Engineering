@@ -3,7 +3,7 @@ require('dotenv').config({ path: './.env' });
 const oracledb = require('oracledb');
 
 // Enable Thick mode for Oracle 11g
-oracledb.initOracleClient({ libDir: 'C:\\instantclient_23_9' }); // Update path if needed
+oracledb.initOracleClient({ libDir: 'C:\\instantclient_23_9' });
 
 
 const dbConfig = {
