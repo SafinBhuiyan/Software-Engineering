@@ -541,6 +541,8 @@ module.exports = function(req, res, parsedUrl) {
     } else if (pathname.startsWith('/api/teacher/rooms/') && method === 'PUT') {
         (async () => {
             try {
+                console.log('PUT request received:', { pathname, method, body: req.body });
+
                 const user = await getUserFromSession(req);
                 if (!user || user.role !== 'teacher') {
                     res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -552,17 +554,39 @@ module.exports = function(req, res, parsedUrl) {
                 const urlParts = parsedUrl.pathname.split('/');
                 const roomId = urlParts[urlParts.length - 1];
 
+                console.log('Parsed roomId:', roomId);
+
                 if (!roomId || isNaN(roomId)) {
+                    console.log('ERROR: Invalid room ID - roomId:', roomId, 'isNaN:', isNaN(roomId));
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Invalid room ID' }));
                     return;
                 }
 
-                const { room_no, date, time_from, time_to } = req.body;
+                console.log('req.body:', req.body);
+                const { room_no, date, time_from, time_to, room_id: bodyRoomId } = req.body;
+                console.log('Destructured values:', { room_no, date, time_from, time_to });
+                console.log('Body contains room_id:', !!bodyRoomId, 'value:', bodyRoomId);
 
                 if (!room_no || !date || !time_from || !time_to) {
+                    console.log('ERROR: Missing required fields - room_no:', !!room_no, 'date:', !!date, 'time_from:', !!time_from, 'time_to:', !!time_to);
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Missing required fields' }));
+                    return;
+                }
+
+                // Check if room has any booked slots
+                const bookedSlots = await db.execute(
+                    `SELECT COUNT(*) as booked_count FROM Slots
+                     WHERE room_id = :room_id AND is_booked = 'Y'`,
+                    [parseInt(roomId)]
+                );
+
+                if (bookedSlots[0].BOOKED_COUNT > 0) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        error: 'Cannot update room with active bookings. Cancel all bookings first.'
+                    }));
                     return;
                 }
 
@@ -580,29 +604,37 @@ module.exports = function(req, res, parsedUrl) {
                     return;
                 }
 
-                // Update room - use simpler timestamp format
-                const timeFromStr = `${date} ${time_from}`;
-                const timeToStr = `${date} ${time_to}`;
+                // Update room - use date string directly to avoid timezone conversion issues
+                // HTML date inputs provide YYYY-MM-DD format which Oracle can handle directly
+                const timeFromStr = `${date} ${time_from}:00`;
+                const timeToStr = `${date} ${time_to}:00`;
+
+                console.log('Updating room:', {
+                    room_id: parseInt(roomId),
+                    room_no,
+                    date,
+                    time_from: timeFromStr,
+                    time_to: timeToStr
+                });
 
                 await db.execute(
-                    `UPDATE Rooms SET room_no = :room_no, date_available = TO_DATE(:date, 'YYYY-MM-DD'),
-                     time_from = TO_TIMESTAMP(:time_from, 'YYYY-MM-DD HH24:MI'),
-                     time_to = TO_TIMESTAMP(:time_to, 'YYYY-MM-DD HH24:MI')
-                     WHERE room_id = :room_id`,
-                    {
-                        room_no: room_no,
-                        date: date,
-                        time_from: timeFromStr,
-                        time_to: timeToStr,
-                        room_id: roomId
-                    }
+                    `UPDATE Rooms SET room_no = :1, date_available = TO_DATE(:2, 'YYYY-MM-DD'),
+                     time_from = TO_TIMESTAMP(:3, 'YYYY-MM-DD HH24:MI:SS'),
+                     time_to = TO_TIMESTAMP(:4, 'YYYY-MM-DD HH24:MI:SS')
+                     WHERE room_id = :5`,
+                    [room_no, date, timeFromStr, timeToStr, parseInt(roomId)]
                 );
+
+                // Verify the update by querying the room back
+                const updatedRoom = await db.execute('SELECT * FROM Rooms WHERE room_id = :room_id', [parseInt(roomId)]);
+                console.log('Room after update:', updatedRoom[0]);
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     success: true,
                     message: 'Room updated successfully',
-                    room_id: roomId
+                    room_id: roomId,
+                    stored_date: updatedRoom[0]?.DATE_AVAILABLE
                 }));
             } catch (err) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });

@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available Slots - Unislot</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="container">
         <nav class="navbar">
             <div class="navbar-logo">
-                <img src="/images/logo.png" alt="Unislot Logo">
+                <a href="/dashboard_student">
+                    <img src="/images/logo.png" alt="Unislot Logo">
+                </a>
             </div>
             <div class="navbar-nav">
                 <a href="/dashboard_student" class="nav-link">Dashboard</a>
@@ -91,16 +93,14 @@
                     const formattedEndTime = formatTime(slot.time_end);
 
                     return `
-                    <div class="slot-card">
-                        <div class="slot-header">
+                    <div class="booking-card card">
+                        <div class="booking-info">
                             <h3>Room ${slot.room_no}</h3>
+                            <p><strong>Date:</strong> ${formattedDate}</p>
+                            <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
                         </div>
-                        <div class="slot-details">
-                            <div class="slot-info">
-                                <p><strong>Date:</strong> ${formattedDate}</p>
-                                <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
-                            </div>
-                            <button class="btn btn-primary" onclick="bookSlot(${slot.slot_id})">
+                        <div style="display: flex; gap: 8px; justify-content: flex-start; margin-top: 6px;">
+                            <button class="btn btn-primary" onclick="bookSlot(${slot.slot_id})" style="width: 100%;">
                                 Book This Slot
                             </button>
                         </div>

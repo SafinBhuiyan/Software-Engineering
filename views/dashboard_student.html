@@ -11,7 +11,9 @@
     <div class="container">
         <nav class="navbar">
             <div class="navbar-logo">
-                <img src="/images/logo.png" alt="Unislot Logo">
+                <a href="/dashboard_student">
+                    <img src="/images/logo.png" alt="Unislot Logo">
+                </a>
             </div>
             <div class="navbar-nav">
                 <a href="/dashboard_student" class="nav-link active">Dashboard</a>
@@ -27,16 +29,14 @@
             <div class="dashboard-section">
                 <h2>Quick Actions</h2>
                 <div class="action-buttons">
-                    <div class="button-group">
-                        <h3>Available Slots</h3>
+                    <a href="/slots" class="button-group clickable-card">
+                        <h3>Available Slots <span id="slotsCount" class="count-badge">0</span></h3>
                         <p>View and book available presentation slots</p>
-                        <a href="/slots" class="btn btn-primary">View All Slots</a>
-                    </div>
-                    <div class="button-group">
-                        <h3>My Bookings</h3>
+                    </a>
+                    <a href="/bookings" class="button-group clickable-card">
+                        <h3>My Bookings <span id="bookingsCount" class="count-badge">0</span></h3>
                         <p>View your current and past bookings</p>
-                        <a href="/bookings" class="btn btn-primary">View All Bookings</a>
-                    </div>
+                    </a>
                 </div>
             </div>
 
@@ -79,24 +79,44 @@
                 // Load data
                 loadAvailableSlots();
                 loadMyBookings();
+                loadQuickActionCounts();
             } catch (error) {
                 window.location.href = '/login';
             }
         });
+
+        // Load quick action counts
+        async function loadQuickActionCounts() {
+            try {
+                // Load slots count
+                const slotsResponse = await fetch('/api/student/slots');
+                const slotsResult = await slotsResponse.json();
+                document.getElementById('slotsCount').textContent = slotsResult.slots.length;
+
+                // Load bookings count
+                const bookingsResponse = await fetch('/api/student/bookings');
+                const bookingsResult = await bookingsResponse.json();
+                document.getElementById('bookingsCount').textContent = bookingsResult.bookings.length;
+            } catch (error) {
+                console.error('Error loading counts:', error);
+                document.getElementById('slotsCount').textContent = '0';
+                document.getElementById('bookingsCount').textContent = '0';
+            }
+        }
 
         // Load available slots
         async function loadAvailableSlots() {
             try {
                 const response = await fetch('/api/student/slots');
                 const result = await response.json();
-                
+
                 const container = document.getElementById('slotsContainer');
-                
+
                 if (result.slots.length === 0) {
                     container.innerHTML = '<p class="no-data">No available slots at the moment.</p>';
                     return;
                 }
-                
+
                 const slotsHTML = result.slots.map(slot => {
                     // Format date to DD-MM-YYYY
                     const dateParts = slot.date.split('-');
@@ -115,22 +135,27 @@
                     const formattedEndTime = formatTime(slot.time_end);
 
                     return `
-                    <div class="slot-card">
-                        <div class="slot-info">
+                    <div class="booking-card card">
+                        <div class="booking-info">
                             <h3>Room ${slot.room_no}</h3>
                             <p><strong>Date:</strong> ${formattedDate}</p>
                             <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
                         </div>
-                        <button class="btn btn-primary" onclick="bookSlot(${slot.slot_id})">
-                            Book This Slot
-                        </button>
+                        <div style="display: flex; gap: 8px; justify-content: flex-start; margin-top: 6px;">
+                            <button class="btn btn-primary" onclick="bookSlot(${slot.slot_id})" style="width: 100%;">
+                                Book This Slot
+                            </button>
+                        </div>
                     </div>
                     `;
                 }).join('');
-                
+
                 container.innerHTML = slotsHTML;
+
+                // Update count after loading slots
+                document.getElementById('slotsCount').textContent = result.slots.length;
             } catch (error) {
-                document.getElementById('slotsContainer').innerHTML = 
+                document.getElementById('slotsContainer').innerHTML =
                     '<p class="error">Error loading slots. Please refresh the page.</p>';
             }
         }
@@ -166,18 +191,18 @@
                     const formattedEndTime = formatTime(booking.time_end);
 
                     return `
-                    <div class="booking-card">
+                    <div class="booking-card card">
                         <div class="booking-info">
                             <h3>Room ${booking.room_no}</h3>
                             <p><strong>Date:</strong> ${formattedDate}</p>
                             <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
                             <p><strong>Token:</strong> <code>${booking.token_code}</code></p>
                         </div>
-                        <div style="display: flex; gap: 8px; justify-content: flex-start;">
-                            <a href="/token?code=${booking.token_code}" class="btn btn-secondary">
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+                            <a href="/token?code=${booking.token_code}" class="btn btn-secondary card-secondary" style="width: 100%;">
                                 View Token
                             </a>
-                            <button class="btn btn-danger" onclick="cancelBooking(${booking.booking_id})">
+                            <button class="btn btn-danger" onclick="cancelBooking(${booking.booking_id})" style="width: 100%;">
                                 Cancel Booking
                             </button>
                         </div>
@@ -186,8 +211,11 @@
                 }).join('');
                 
                 container.innerHTML = bookingsHTML;
+
+                // Update count after loading bookings
+                document.getElementById('bookingsCount').textContent = result.bookings.length;
             } catch (error) {
-                document.getElementById('bookingsContainer').innerHTML = 
+                document.getElementById('bookingsContainer').innerHTML =
                     '<p class="error">Error loading bookings. Please refresh the page.</p>';
             }
         }
@@ -212,6 +240,7 @@
                     alert(result.error || 'Booking failed. Please try again.');
                     // Refresh slots to show updated availability
                     loadAvailableSlots();
+                    loadQuickActionCounts();
                 }
             } catch (error) {
                 alert('Network error. Please try again.');
@@ -241,6 +270,7 @@
                     // Refresh bookings to show updated list
                     loadMyBookings();
                     loadAvailableSlots();
+                    loadQuickActionCounts();
                 } else {
                     alert(result.error || 'Failed to cancel booking');
                 }

@@ -20,7 +20,8 @@ const mimeTypes = {
     '.json': 'application/json',
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
-    '.gif': 'image/gif'
+    '.gif': 'image/gif',
+    '.ico': 'image/x-icon'
 };
 
 // Parse POST body
@@ -83,8 +84,8 @@ async function handleRequest(req, res) {
         return;
     }
 
-    // Parse body for POST and DELETE requests
-    if (method === 'POST' || method === 'DELETE') {
+    // Parse body for POST, PUT and DELETE requests
+    if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
         req.body = await parseBody(req);
     }
 
@@ -103,6 +104,8 @@ async function handleRequest(req, res) {
         filePath = path.join(__dirname, 'views', 'login.html');
     } else if (pathname === '/home' || pathname === '/index') {
         filePath = path.join(__dirname, 'views', 'index.html');
+    } else if (pathname === '/favicon.ico') {
+        filePath = path.join(__dirname, 'public', 'favicon.ico');
     } else if (pathname.startsWith('/views/')) {
         filePath = path.join(__dirname, pathname);
     } else if (pathname.startsWith('/css/') || pathname.startsWith('/js/') || pathname.startsWith('/images/')) {

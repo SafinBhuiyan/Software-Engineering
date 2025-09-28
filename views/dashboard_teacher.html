@@ -7,7 +7,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        /* Modal Styles */
+        /* Enhanced Modal Styles - Consistent with main UI */
         .modal {
             display: none;
             position: fixed;
@@ -16,54 +16,86 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal.show {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            border-radius: 8px;
+            /* Inherits all styling from .card base class */
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            position: relative;
+            animation: modalSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            border: 1px solid #B86E9F;
+            border-radius: 28px;
+            transform: scale(1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
         }
 
         .modal-header h3 {
             margin: 0;
-            color: #333;
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .modal-close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
+            color: #cccccc;
+            font-size: 24px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .modal-close:hover {
-            color: #000;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
         }
 
         .modal-body {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .modal-actions {
             display: flex;
+            gap: 12px;
             justify-content: flex-end;
-            gap: 10px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         .form-row {
@@ -78,32 +110,217 @@
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #555;
+            color: #e0e0e0;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            padding: 14px;
+            border: 1px solid #B86E9F;
+            border-radius: 0.75rem;
+            background: rgba(15, 9, 12, 0.8);
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            appearance: none;
+            cursor: pointer;
         }
 
-        .form-group input:focus {
+        .form-group select option {
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 8px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+            border-color: #B86E9F;
+            background: rgba(15, 9, 12, 0.9);
+            box-shadow: 0 0 0 3px rgba(184, 110, 159, 0.1);
         }
 
-        /* Ensure modal is always visible when display is block */
-        .modal[style*="display: block"] {
-            display: block !important;
+        /* Calendar icon for date inputs in modal */
+        .form-group input[type="date"] {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' stroke='%23ffffff'%3e%3cg id='SVGRepo_bgCarrier' stroke-width='0'%3e%3c/g%3e%3cg id='SVGRepo_tracerCarrier' stroke-linecap='round' stroke-linejoin='round'%3e%3c/g%3e%3cg id='SVGRepo_iconCarrier'%3e %3cpath d='M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3e %3c/g%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
+            padding-right: 40px;
         }
 
-        .modal[style*="display: none"] {
-            display: none !important;
+        /* Clock icon for time inputs in modal */
+        .form-group input[type="time"] {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cg id='SVGRepo_bgCarrier' stroke-width='0'%3e%3c/g%3e%3cg id='SVGRepo_tracerCarrier' stroke-linecap='round' stroke-linejoin='round'%3e%3c/g%3e%3cg id='SVGRepo_iconCarrier'%3e %3cpath d='M12 7V12L14.5 10.5M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3e %3c/g%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
+            padding-right: 40px;
+        }
+
+        /* Ensure picker indicators are visible and clickable in modal */
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator,
+        .form-group input[type="time"]::-webkit-calendar-picker-indicator {
+            opacity: 1;
+            cursor: pointer;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            color: rgba(255, 255, 255, 0.8);
+            z-index: 1;
+        }
+
+        /* Modal visibility is now controlled by the 'show' class */
+
+        /* Toast notification styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10000;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast-icon {
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .toast-text {
+            flex: 1;
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .toast-close:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Toast types */
+        .toast-success {
+            background: linear-gradient(135deg,
+                rgba(40, 167, 69, 0.9) 0%,
+                rgba(32, 201, 151, 0.9) 100%);
+            border-color: rgba(40, 167, 69, 0.3);
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg,
+                rgba(220, 53, 69, 0.9) 0%,
+                rgba(176, 42, 55, 0.9) 100%);
+            border-color: rgba(220, 53, 69, 0.3);
+        }
+
+        .toast-warning {
+            background: linear-gradient(135deg,
+                rgba(255, 193, 7, 0.9) 0%,
+                rgba(255, 235, 59, 0.9) 100%);
+            border-color: rgba(255, 193, 7, 0.3);
+        }
+
+        .toast-warning .toast-icon {
+            color: #000;
+        }
+
+        .toast-warning .toast-text {
+            color: #000;
+        }
+
+        .toast-warning .toast-close {
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        .toast-warning .toast-close:hover {
+            color: #000;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .toast-info {
+            background: linear-gradient(135deg,
+                rgba(23, 162, 184, 0.9) 0%,
+                rgba(0, 123, 255, 0.9) 100%);
+            border-color: rgba(23, 162, 184, 0.3);
+        }
+
+        /* Responsive modal design */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+                max-width: none;
+            }
+
+            .modal-header h3 {
+                font-size: 1.2rem;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .modal-actions button {
+                width: 100%;
+            }
+
+            .toast {
+                left: 10px;
+                right: 10px;
+                min-width: auto;
+                max-width: none;
+            }
         }
     </style>
 </head>
@@ -111,7 +328,9 @@
     <div class="container">
         <nav class="navbar">
             <div class="navbar-logo">
-                <img src="/images/logo.png" alt="Unislot Logo">
+                <a href="/dashboard_teacher">
+                    <img src="/images/logo.png" alt="Unislot Logo">
+                </a>
             </div>
             <div class="navbar-nav">
                 <a href="/dashboard_teacher" class="nav-link active">Dashboard</a>
@@ -126,7 +345,7 @@
         <main class="main-content">
             <div class="dashboard-section">
                 <h2>Create New Room</h2>
-                <form id="createRoomForm" class="form">
+                <form id="createRoomForm" class="form card">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="room_no">Room Number:</label>
@@ -239,8 +458,8 @@
                 // Ensure modal is properly hidden initially
                 const modal = document.getElementById('editRoomModal');
                 if (modal) {
-                    modal.style.display = 'none';
-                    console.log('Modal display set to none');
+                    modal.classList.remove('show');
+                    console.log('Modal show class removed');
                 } else {
                     console.error('Modal element not found!');
                 }
@@ -341,18 +560,18 @@
                     });
 
                     return `
-                    <div class="room-card">
-                        <div class="room-info">
-                            <h3>Room ${room.room_no}</h3>
+                    <div class="booking-card card">
+                        <div class="booking-info">
+                            <h3>Room ${room.room_no} <span class="room-status">Active</span></h3>
                             <p><strong>Date:</strong> ${formattedDate}</p>
                             <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
-                            <p><strong>Slots:</strong> ${room.total_slots} total, ${room.available_slots} available, ${room.booked_slots} booked</p>
+                            <p><strong>Available Slots:</strong> ${room.available_slots}/${room.total_slots}</p>
                         </div>
-                        <div class="room-actions" style="display: flex; gap: 8px; justify-content: flex-start;">
-                            <button class="btn btn-secondary" onclick="handleEditClick(${room.room_id}, '${room.room_no}', '${room.date_available}', '${room.time_from}', '${room.time_to}')">
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+                            <button class="btn btn-secondary card-secondary" onclick="handleEditClick(${room.room_id}, '${room.room_no}', '${room.date_available}', '${room.time_from}', '${room.time_to}')" style="width: 100%;">
                                 Edit Room
                             </button>
-                            <button class="btn btn-danger" onclick="deleteRoom(${room.room_id})">
+                            <button class="btn btn-danger" onclick="deleteRoom(${room.room_id})" style="width: 100%;">
                                 Delete Room
                             </button>
                         </div>
@@ -410,7 +629,7 @@
                     const formattedBookingTime = `${bookingDay}-${bookingMonth}-${bookingYear} ${String(bookingHour12).padStart(2, '0')}-${bookingMinutes} ${bookingAmpm}`;
 
                     return `
-                    <div class="booking-card">
+                    <div class="booking-card card">
                         <div class="booking-info">
                             <h3>Room ${booking.room_no}</h3>
                             <p><strong>Student:</strong> ${booking.student_name} (${booking.student_id})</p>
@@ -436,10 +655,51 @@
             messageDiv.textContent = text;
             messageDiv.className = `message message-${type}`;
             messageDiv.style.display = 'block';
-            
+
             setTimeout(() => {
                 messageDiv.style.display = 'none';
             }, 5000);
+        }
+
+        // Show toast notification
+        function showToast(text, type = 'info') {
+            // Remove existing toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <span class="toast-icon">${getToastIcon(type)}</span>
+                    <span class="toast-text">${text}</span>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            // Add to page
+            document.body.appendChild(toast);
+
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // Get toast icon based on type
+        function getToastIcon(type) {
+            switch(type) {
+                case 'success': return '✓';
+                case 'error': return '✕';
+                case 'warning': return '⚠';
+                case 'info': return 'ℹ';
+                default: return 'ℹ';
+            }
         }
 
         // Test modal function
@@ -482,8 +742,8 @@
                 timeFromField.value = timeFrom;
                 timeToField.value = timeTo;
 
-                // Show modal
-                modal.style.display = 'block';
+                // Show modal using CSS class
+                modal.classList.add('show');
             } catch (error) {
                 alert('Error opening edit modal: ' + error.message);
             }
@@ -491,7 +751,8 @@
 
         // Hide edit room modal
         function hideEditRoomModal() {
-            document.getElementById('editRoomModal').style.display = 'none';
+            const modal = document.getElementById('editRoomModal');
+            modal.classList.remove('show');
             document.getElementById('editRoomForm').reset();
         }
 
@@ -529,7 +790,12 @@
                     loadRooms();
                     loadAllBookings();
                 } else {
-                    showMessage(result.error || 'Failed to update room', 'error');
+                    // Handle specific error messages
+                    if (result.error && result.error.includes('active bookings')) {
+                        showToast(result.error, 'warning');
+                    } else {
+                        showMessage(result.error || 'Failed to update room', 'error');
+                    }
                 }
             } catch (error) {
                 console.error('Network error:', error);
@@ -642,6 +908,24 @@
                 } else {
                     target.setCustomValidity('');
                 }
+            }
+        });
+
+        // Auto-close time picker after selection
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'time' || e.target.type === 'date') {
+                // Blur the input to close the picker
+                e.target.blur();
+            }
+        });
+
+        // Additional handling for time picker close
+        document.addEventListener('focusout', function(e) {
+            if (e.target.type === 'time' || e.target.type === 'date') {
+                // Small delay to ensure value is set before closing
+                setTimeout(() => {
+                    e.target.blur();
+                }, 100);
             }
         });
     </script>

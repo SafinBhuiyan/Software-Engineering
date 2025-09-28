@@ -11,7 +11,9 @@
     <div class="container">
         <nav class="navbar">
             <div class="navbar-logo">
-                <img src="/images/logo.png" alt="Unislot Logo">
+                <a href="/dashboard_student">
+                    <img src="/images/logo.png" alt="Unislot Logo">
+                </a>
             </div>
             <div class="navbar-nav">
                 <a href="/dashboard_student" class="nav-link">Dashboard</a>
@@ -103,25 +105,21 @@
                     const formattedBookingTime = `${bookingDay}-${bookingMonth}-${bookingYear} ${String(bookingHour12).padStart(2, '0')}-${bookingMinutes} ${bookingAmpm}`;
 
                     return `
-                    <div class="booking-card">
-                        <div class="booking-header">
+                    <div class="booking-card card">
+                        <div class="booking-info">
                             <h3>Room ${booking.room_no}</h3>
-                            <span class="booking-token">Token: ${booking.token_code}</span>
+                            <p><strong>Date:</strong> ${formattedDate}</p>
+                            <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
+                            <p><strong>Token:</strong> <code>${booking.token_code}</code></p>
+                            <p><strong>Booked on:</strong> ${formattedBookingTime}</p>
                         </div>
-                        <div class="booking-details">
-                            <div class="booking-info">
-                                <p><strong>Date:</strong> ${formattedDate}</p>
-                                <p><strong>Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
-                                <p><strong>Booked on:</strong> ${formattedBookingTime}</p>
-                            </div>
-                            <div class="booking-actions" style="display: flex; flex-direction: column; gap: 8px;">
-                                <button class="btn btn-primary" onclick="viewToken('${booking.token_code}')" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: 600;">
-                                    View Token
-                                </button>
-                                <button class="btn btn-danger" onclick="cancelBooking(${booking.booking_id}, '${booking.room_no}')" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: 600;">
-                                    Cancel Booking
-                                </button>
-                            </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+                            <button class="btn btn-secondary card-secondary" onclick="viewToken('${booking.token_code}')" style="width: 100%;">
+                                View Token
+                            </button>
+                            <button class="btn btn-danger" onclick="cancelBooking(${booking.booking_id}, '${booking.room_no}')" style="width: 100%;">
+                                Cancel Booking
+                            </button>
                         </div>
                     </div>
                     `;
